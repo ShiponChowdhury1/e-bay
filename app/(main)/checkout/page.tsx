@@ -217,8 +217,7 @@ export default function CheckoutPage() {
               <h2 className="text-lg font-bold mb-4">Payment Method</h2>
               <div className="space-y-3">
                 {[
-                  { value: "card", label: "Credit / Debit Card", icon: "💳" },
-                  { value: "paypal", label: "PayPal", icon: "🅿️" },
+                  { value: "card", label: "Credit / Debit Card (Stripe)", icon: "💳" },
                   { value: "cod", label: "Cash on Delivery", icon: "💵" },
                 ].map((pm) => (
                   <label

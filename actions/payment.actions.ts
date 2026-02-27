@@ -1,44 +1,112 @@
 "use server";
 
+import Stripe from "stripe";
+import { connectDB } from "@/lib/db";
+import mongoose from "mongoose";
 import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-// Get auth token from cookies
-async function getAuthToken() {
+// ─── Order Schema ───
+const orderSchema = new mongoose.Schema(
+  {
+    buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    items: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        title: String,
+        price: Number,
+        quantity: Number,
+        image: String,
+      },
+    ],
+    shippingAddress: {
+      fullName: String,
+      street: String,
+      city: String,
+      state: String,
+      zipCode: String,
+      country: String,
+      phone: String,
+    },
+    paymentMethod: { type: String, enum: ["card", "cod"], default: "card" },
+    paymentStatus: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
+    stripeSessionId: String,
+    stripePaymentIntentId: String,
+    totalAmount: Number,
+    status: { type: String, default: "pending" },
+  },
+  { timestamps: true }
+);
+
+const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
+
+// ─── Get User from Token ───
+async function getUserFromToken() {
   const cookieStore = await cookies();
-  return cookieStore.get("accessToken")?.value;
+  const token = cookieStore.get("accessToken")?.value;
+
+  if (!token) return null;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as { id: string };
+    return decoded.id;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Create Stripe Checkout Session ───
 export async function createStripeCheckoutAction(orderId: string) {
   try {
-    const token = await getAuthToken();
-    if (!token) {
+    await connectDB();
+    
+    const userId = await getUserFromToken();
+    if (!userId) {
       return { success: false, message: "Not authenticated" };
     }
 
-    const res = await fetch(`${API_URL}/payments/create-checkout-session`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+    const order = await Order.findOne({ _id: orderId, buyer: userId });
+    if (!order) {
+      return { success: false, message: "Order not found" };
+    }
+
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: order.items.map((item: { title: string; price: number; quantity: number; image?: string }) => ({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: item.title,
+            images: item.image ? [item.image] : [],
+          },
+          unit_amount: Math.round(item.price * 100), // Stripe uses cents
+        },
+        quantity: item.quantity,
+      })),
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/orders/${orderId}?payment=success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/orders/${orderId}?payment=cancelled`,
+      metadata: {
+        orderId: orderId,
+        userId: userId,
       },
-      body: JSON.stringify({ orderId }),
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { success: false, message: data.message || "Failed to create checkout session" };
-    }
+    // Save session ID to order
+    order.stripeSessionId = session.id;
+    await order.save();
 
     return {
       success: true,
-      sessionId: data.sessionId,
-      url: data.url,
+      sessionId: session.id,
+      url: session.url,
     };
   } catch (error: unknown) {
+    console.error("Stripe checkout error:", error);
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
   }
@@ -47,30 +115,66 @@ export async function createStripeCheckoutAction(orderId: string) {
 // ─── Create Payment Intent (for Stripe Elements) ───
 export async function createPaymentIntentAction(orderId: string) {
   try {
-    const token = await getAuthToken();
-    if (!token) {
+    await connectDB();
+    
+    const userId = await getUserFromToken();
+    if (!userId) {
       return { success: false, message: "Not authenticated" };
     }
 
-    const res = await fetch(`${API_URL}/payments/create-payment-intent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+    const order = await Order.findOne({ _id: orderId, buyer: userId });
+    if (!order) {
+      return { success: false, message: "Order not found" };
+    }
+
+    // Calculate total
+    const total = order.items.reduce(
+      (sum: number, item: { price: number; quantity: number }) => sum + item.price * item.quantity,
+      0
+    );
+
+    // Create Payment Intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(total * 100), // cents
+      currency: "usd",
+      metadata: {
+        orderId: orderId,
+        userId: userId,
       },
-      body: JSON.stringify({ orderId }),
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { success: false, message: data.message || "Failed to create payment intent" };
-    }
+    order.stripePaymentIntentId = paymentIntent.id;
+    await order.save();
 
     return {
       success: true,
-      clientSecret: data.clientSecret,
+      clientSecret: paymentIntent.client_secret,
     };
+  } catch (error: unknown) {
+    console.error("Payment intent error:", error);
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message };
+  }
+}
+
+// ─── Verify Payment (called after successful payment) ───
+export async function verifyPaymentAction(sessionId: string) {
+  try {
+    await connectDB();
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status === "paid") {
+      // Update order status
+      await Order.findOneAndUpdate(
+        { stripeSessionId: sessionId },
+        { paymentStatus: "paid", status: "processing" }
+      );
+
+      return { success: true, message: "Payment verified" };
+    }
+
+    return { success: false, message: "Payment not completed" };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
@@ -79,20 +183,8 @@ export async function createPaymentIntentAction(orderId: string) {
 
 // ─── Get Stripe Config ───
 export async function getStripeConfigAction() {
-  try {
-    const res = await fetch(`${API_URL}/payments/config`);
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { success: false, message: "Failed to get Stripe config" };
-    }
-
-    return {
-      success: true,
-      publishableKey: data.publishableKey,
-    };
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "An error occurred";
-    return { success: false, message };
-  }
+  return {
+    success: true,
+    publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  };
 }
