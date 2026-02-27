@@ -218,28 +218,55 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-lg sm:rounded-xl border p-4 sm:p-6">
               <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Payment Method</h2>
               <div className="space-y-2 sm:space-y-3">
-                {[
-                  { value: "card", label: "Credit / Debit Card (Stripe)", icon: "💳" },
-                  { value: "cod", label: "Cash on Delivery", icon: "💵" },
-                ].map((pm) => (
-                  <label
-                    key={pm.value}
-                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border rounded-lg cursor-pointer transition text-sm sm:text-base ${
-                      paymentMethod === pm.value ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={pm.value}
-                      checked={paymentMethod === pm.value}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="radio radio-sm radio-primary"
-                    />
-                    <span className="text-lg sm:text-xl">{pm.icon}</span>
-                    <span className="font-medium">{pm.label}</span>
-                  </label>
-                ))}
+                {/* Credit / Debit Card - Stripe */}
+                <label
+                  className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border rounded-lg cursor-pointer transition text-sm sm:text-base ${
+                    paymentMethod === "card" ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="card"
+                    checked={paymentMethod === "card"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="radio radio-sm radio-primary"
+                  />
+                  <Image
+                    src="/stripe/stripe.png"
+                    alt="Stripe"
+                    width={64}
+                    height={28}
+                    className="object-contain h-7 w-auto"
+                    unoptimized
+                  />
+                  <span className="font-medium">Credit / Debit Card</span>
+                </label>
+
+                {/* Cash on Delivery */}
+                <label
+                  className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border rounded-lg cursor-pointer transition text-sm sm:text-base ${
+                    paymentMethod === "cod" ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={paymentMethod === "cod"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="radio radio-sm radio-primary"
+                  />
+                  <Image
+                    src="/stripe/cash-on-delivery.png"
+                    alt="Cash on Delivery"
+                    width={64}
+                    height={28}
+                    className="object-contain h-7 w-auto"
+                    unoptimized
+                  />
+                  <span className="font-medium">Cash on Delivery</span>
+                </label>
               </div>
             </div>
           </div>
