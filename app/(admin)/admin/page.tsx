@@ -261,9 +261,10 @@ export default function AdminDashboard() {
                     padding: "12px 16px",
                   }}
                   labelStyle={{ color: "#111827", fontWeight: 600, marginBottom: 8 }}
-                  formatter={(value: number, name: string, props: { payload: { actualOrders: number } }) => {
+                  formatter={(value, name, props) => {
+                    const payload = props?.payload as { actualOrders?: number } | undefined;
                     if (name === "revenue") return [`$${Number(value).toLocaleString()}`, "Revenue"];
-                    if (name === "orders") return [props.payload.actualOrders, "Orders"];
+                    if (name === "orders") return [payload?.actualOrders ?? value, "Orders"];
                     return [value, name];
                   }}
                   cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "5 5" }}

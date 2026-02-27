@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -9,7 +9,26 @@ import { updateProfileAction, changePasswordAction, updateAvatarAction } from "@
 
 type TabKey = "profile" | "password";
 
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-base-200 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+        <p className="text-base-content/60">Loading settings...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <SettingsForm />
+    </Suspense>
+  );
+}
+
+function SettingsForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();

@@ -59,27 +59,23 @@ export default function CreateProductPage() {
     setError("");
 
     try {
-      const productData: Record<string, unknown> = {
+      const productData = {
         title: form.title,
         description: form.description,
         price: parseFloat(form.price),
         category: form.category,
-        condition: form.condition,
-        productType: form.productType,
+        condition: form.condition as "new" | "used" | "refurbished",
+        productType: form.productType as "auction" | "buy_now",
         stock: parseInt(form.stock),
         images: form.images.split(",").map((s) => s.trim()).filter(Boolean),
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
         shippingCost: parseFloat(form.shippingCost) || 0,
         freeShipping: form.freeShipping,
         shippingInfo: form.shippingInfo,
+        originalPrice: form.originalPrice ? parseFloat(form.originalPrice) : undefined,
+        auctionStartPrice: form.productType === "auction" ? parseFloat(form.auctionStartPrice) : undefined,
+        auctionEndTime: form.productType === "auction" ? form.auctionEndTime : undefined,
       };
-
-      if (form.originalPrice) productData.originalPrice = parseFloat(form.originalPrice);
-
-      if (form.productType === "auction") {
-        productData.auctionStartPrice = parseFloat(form.auctionStartPrice);
-        productData.auctionEndTime = form.auctionEndTime;
-      }
 
       const res = await createProductAction(productData);
 
