@@ -69,11 +69,8 @@ export default function CheckoutPage() {
     try {
       const orderData = {
         items: items.map((item) => ({
-          product: item.product._id || item.product.id,
-          title: item.product.title,
-          price: item.product.price,
+          product: item.product._id || item.product.id || "",
           quantity: item.quantity,
-          image: item.product.images?.[0] || "",
         })),
         shippingAddress: shipping,
         paymentMethod,

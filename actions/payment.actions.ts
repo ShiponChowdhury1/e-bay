@@ -2,7 +2,7 @@
 
 import Stripe from "stripe";
 import { connectDB } from "@/lib/db";
-import mongoose from "mongoose";
+import { Order } from "@/lib/models/Order";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
@@ -10,26 +10,6 @@ import jwt from "jsonwebtoken";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "default_refresh_secret";
-
-// ─── Order Schema ───
-const orderSchema = new mongoose.Schema({
-  buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  items: [{
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-    title: String,
-    price: Number,
-    quantity: Number,
-    image: String,
-  }],
-  totalAmount: Number,
-  grandTotal: Number,
-  paymentStatus: String,
-  stripeSessionId: String,
-  stripePaymentIntentId: String,
-  orderStatus: String,
-}, { timestamps: true });
-
-const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type OrderDoc = any;
