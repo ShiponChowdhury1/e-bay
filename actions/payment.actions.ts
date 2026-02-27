@@ -9,6 +9,8 @@ import jwt from "jsonwebtoken";
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "default_refresh_secret";
+
 // ─── Order Schema ───
 const orderSchema = new mongoose.Schema(
   {
@@ -46,13 +48,13 @@ const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 // ─── Get User from Token ───
 async function getUserFromToken() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("accessToken")?.value;
+  const token = cookieStore.get("refreshToken")?.value;
 
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as { id: string };
-    return decoded.id;
+    const decoded = jwt.verify(token, REFRESH_SECRET) as { userId: string };
+    return decoded.userId;
   } catch {
     return null;
   }
