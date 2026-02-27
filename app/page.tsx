@@ -6,6 +6,9 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartSidebar from "@/components/cart/CartSidebar";
 
+// Force dynamic rendering - fetch fresh data on each request
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const [productsRes, categoriesRes, auctionsRes] = await Promise.all([
     getProductsAction({ limit: 12, sort: "createdAt", order: "desc" }),

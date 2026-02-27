@@ -3,6 +3,9 @@ import Image from "next/image";
 import { getActiveAuctionsAction } from "@/actions/auction.actions";
 import { ProductType } from "@/types";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 interface AuctionResponse {
   success: boolean;
   data?: ProductType[];
