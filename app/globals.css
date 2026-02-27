@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: #ffffff;
+  color: #171717;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Fix DaisyUI overriding input text colors */
+input,
+select,
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"] {
+  color: #171717 !important;
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+  background-color: #ffffff !important;
+}
+
+/* Fix browser autofill gray background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #171717 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  background-color: #ffffff !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important;
+}
+
