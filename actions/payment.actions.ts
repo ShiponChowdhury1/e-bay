@@ -39,14 +39,21 @@ export async function createStripeCheckoutAction(orderId: string) {
       return { success: false, message: "Not authenticated" };
     }
 
-    const order = await Order.findById(orderId) as OrderDoc;
-    if (!order || order.buyer?.toString() !== userId) {
+    // Use .lean() to get plain JavaScript object
+    const order = await Order.findById(orderId).lean() as OrderDoc;
+    console.log("Order found:", orderId, "Items:", order?.items?.length, "Order keys:", Object.keys(order || {}));
+    
+    if (!order) {
       return { success: false, message: "Order not found" };
+    }
+    
+    if (order.buyer?.toString() !== userId) {
+      return { success: false, message: "Order not authorized for this user" };
     }
 
     // Ensure items exist
     if (!order.items || order.items.length === 0) {
-      return { success: false, message: "Order has no items" };
+      return { success: false, message: `Order has no items. Order ID: ${orderId}` };
     }
 
     // Create Stripe Checkout Session
@@ -72,9 +79,8 @@ export async function createStripeCheckoutAction(orderId: string) {
       },
     });
 
-    // Save session ID to order
-    order.stripeSessionId = session.id;
-    await order.save();
+    // Save session ID to order using findByIdAndUpdate (since we used .lean())
+    await Order.findByIdAndUpdate(orderId, { stripeSessionId: session.id });
 
     return {
       success: true,

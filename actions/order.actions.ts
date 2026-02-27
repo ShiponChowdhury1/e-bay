@@ -98,6 +98,8 @@ export async function createOrderAction(data: {
     const tax = Math.round(totalAmount * 0.08 * 100) / 100;
     const grandTotal = Math.round((totalAmount + shippingCost + tax) * 100) / 100;
 
+    console.log("Creating order with items:", JSON.stringify(orderItems));
+
     const order = await Order.create({
       buyer: user.userId,
       seller: sellerId,
@@ -109,6 +111,8 @@ export async function createOrderAction(data: {
       shippingAddress: data.shippingAddress,
       paymentMethod: data.paymentMethod || "card",
     });
+
+    console.log("Created order:", order._id, "Items saved:", order.items?.length);
 
     // Update stock
     for (const item of data.items) {
