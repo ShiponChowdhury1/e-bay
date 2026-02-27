@@ -12,38 +12,27 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "default_refresh_secret";
 
 // ─── Order Schema ───
-const orderSchema = new mongoose.Schema(
-  {
-    buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    items: [
-      {
-        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-        title: String,
-        price: Number,
-        quantity: Number,
-        image: String,
-      },
-    ],
-    shippingAddress: {
-      fullName: String,
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
-      country: String,
-      phone: String,
-    },
-    paymentMethod: { type: String, enum: ["card", "cod"], default: "card" },
-    paymentStatus: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
-    stripeSessionId: String,
-    stripePaymentIntentId: String,
-    totalAmount: Number,
-    status: { type: String, default: "pending" },
-  },
-  { timestamps: true }
-);
+const orderSchema = new mongoose.Schema({
+  buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  items: [{
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    title: String,
+    price: Number,
+    quantity: Number,
+    image: String,
+  }],
+  totalAmount: Number,
+  grandTotal: Number,
+  paymentStatus: String,
+  stripeSessionId: String,
+  stripePaymentIntentId: String,
+  orderStatus: String,
+}, { timestamps: true });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type OrderDoc = any;
 
 // ─── Get User from Token ───
 async function getUserFromToken() {
@@ -70,9 +59,14 @@ export async function createStripeCheckoutAction(orderId: string) {
       return { success: false, message: "Not authenticated" };
     }
 
-    const order = await Order.findOne({ _id: orderId, buyer: userId });
-    if (!order) {
+    const order = await Order.findById(orderId) as OrderDoc;
+    if (!order || order.buyer?.toString() !== userId) {
       return { success: false, message: "Order not found" };
+    }
+
+    // Ensure items exist
+    if (!order.items || order.items.length === 0) {
+      return { success: false, message: "Order has no items" };
     }
 
     // Create Stripe Checkout Session
@@ -83,12 +77,12 @@ export async function createStripeCheckoutAction(orderId: string) {
         price_data: {
           currency: "usd",
           product_data: {
-            name: item.title,
+            name: item.title || "Product",
             images: item.image ? [item.image] : [],
           },
-          unit_amount: Math.round(item.price * 100), // Stripe uses cents
+          unit_amount: Math.round((item.price || 0) * 100), // Stripe uses cents
         },
-        quantity: item.quantity,
+        quantity: item.quantity || 1,
       })),
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/orders/${orderId}?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/orders/${orderId}?payment=cancelled`,
@@ -124,16 +118,16 @@ export async function createPaymentIntentAction(orderId: string) {
       return { success: false, message: "Not authenticated" };
     }
 
-    const order = await Order.findOne({ _id: orderId, buyer: userId });
-    if (!order) {
+    const order = await Order.findById(orderId) as OrderDoc;
+    if (!order || order.buyer?.toString() !== userId) {
       return { success: false, message: "Order not found" };
     }
 
-    // Calculate total
-    const total = order.items.reduce(
-      (sum: number, item: { price: number; quantity: number }) => sum + item.price * item.quantity,
+    // Use grandTotal from order or calculate from items
+    const total = order.grandTotal || order.items?.reduce(
+      (sum: number, item: { price: number; quantity: number }) => sum + (item.price || 0) * (item.quantity || 1),
       0
-    );
+    ) || 0;
 
     // Create Payment Intent
     const paymentIntent = await stripe.paymentIntents.create({
@@ -170,7 +164,7 @@ export async function verifyPaymentAction(sessionId: string) {
       // Update order status
       await Order.findOneAndUpdate(
         { stripeSessionId: sessionId },
-        { paymentStatus: "paid", status: "processing" }
+        { paymentStatus: "paid", orderStatus: "confirmed" }
       );
 
       return { success: true, message: "Payment verified" };
