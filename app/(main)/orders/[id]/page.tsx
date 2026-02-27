@@ -4,29 +4,32 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getOrderByIdAction, cancelOrderAction } from "@/actions/order.actions";
+import { verifyPaymentAction } from "@/actions/payment.actions";
 import { OrderType } from "@/types";
-import { use } from "react";
+import { use, Suspense } from "react";
 
 interface OrderResponse {
   success: boolean;
   data?: OrderType;
 }
 
-export default function OrderDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+function OrderDetailContent({ id }: { id: string }) {
+  const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const payment = searchParams.get("payment");
+  
   const [order, setOrder] = useState<OrderType | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState<{ type: "success" | "error" | "cancelled"; text: string } | null>(null);
 
   useEffect(() => {
+    // Wait for auth to load before checking
+    if (authLoading) return;
+    
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -34,13 +37,27 @@ export default function OrderDetailPage({
 
     const fetchOrder = async () => {
       const res = (await getOrderByIdAction(id)) as OrderResponse;
-      if (res.success) {
-        setOrder(res.data ?? null);
+      if (res.success && res.data) {
+        setOrder(res.data);
+        
+        // Handle payment status from Stripe redirect
+        if (payment === "success") {
+          // Verify and update payment status
+          const verifyRes = await verifyPaymentAction(id);
+          if (verifyRes.success) {
+            setPaymentMessage({ type: "success", text: "Payment successful! Your order is confirmed." });
+            setOrder(prev => prev ? { ...prev, paymentStatus: "paid" } : null);
+          } else {
+            setPaymentMessage({ type: "success", text: "Payment received! Order is being processed." });
+          }
+        } else if (payment === "cancelled") {
+          setPaymentMessage({ type: "cancelled", text: "Payment was cancelled. You can try again later." });
+        }
       }
       setLoading(false);
     };
     fetchOrder();
-  }, [id, isAuthenticated, router]);
+  }, [id, isAuthenticated, authLoading, router, payment]);
 
   const handleCancel = async () => {
     if (!confirm("Are you sure you want to cancel this order?")) return;
@@ -52,7 +69,7 @@ export default function OrderDetailPage({
     setCancelling(false);
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
@@ -71,6 +88,22 @@ export default function OrderDetailPage({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Payment Status Banner */}
+      {paymentMessage && (
+        <div className={`mb-6 p-4 rounded-lg ${
+          paymentMessage.type === "success" ? "bg-green-100 border border-green-300 text-green-800" :
+          paymentMessage.type === "cancelled" ? "bg-yellow-100 border border-yellow-300 text-yellow-800" :
+          "bg-red-100 border border-red-300 text-red-800"
+        }`}>
+          <div className="flex items-center gap-2">
+            {paymentMessage.type === "success" && <span className="text-xl">✅</span>}
+            {paymentMessage.type === "cancelled" && <span className="text-xl">⚠️</span>}
+            {paymentMessage.type === "error" && <span className="text-xl">❌</span>}
+            <p className="font-medium">{paymentMessage.text}</p>
+          </div>
+        </div>
+      )}
+
       <Link href="/orders" className="text-sm text-blue-600 hover:underline mb-4 inline-block">&larr; Back to Orders</Link>
 
       <div className="flex items-center justify-between mb-6">
@@ -183,5 +216,23 @@ export default function OrderDetailPage({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+
+  return (
+    <Suspense fallback={
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
+      </div>
+    }>
+      <OrderDetailContent id={id} />
+    </Suspense>
   );
 }

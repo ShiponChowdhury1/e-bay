@@ -140,20 +140,31 @@ export async function createPaymentIntentAction(orderId: string) {
 }
 
 // ─── Verify Payment (called after successful payment) ───
-export async function verifyPaymentAction(sessionId: string) {
+export async function verifyPaymentAction(orderId: string) {
   try {
     await connectDB();
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const order = await Order.findById(orderId) as OrderDoc;
+    if (!order) {
+      return { success: false, message: "Order not found" };
+    }
 
-    if (session.payment_status === "paid") {
-      // Update order status
-      await Order.findOneAndUpdate(
-        { stripeSessionId: sessionId },
-        { paymentStatus: "paid", orderStatus: "confirmed" }
-      );
+    // If order already paid, return success
+    if (order.paymentStatus === "paid") {
+      return { success: true, message: "Payment already verified" };
+    }
 
-      return { success: true, message: "Payment verified" };
+    // If we have a stripeSessionId, verify it
+    if (order.stripeSessionId) {
+      const session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
+      
+      if (session.payment_status === "paid") {
+        await Order.findByIdAndUpdate(orderId, {
+          paymentStatus: "paid",
+          orderStatus: "confirmed"
+        });
+        return { success: true, message: "Payment verified" };
+      }
     }
 
     return { success: false, message: "Payment not completed" };
