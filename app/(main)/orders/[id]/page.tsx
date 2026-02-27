@@ -7,6 +7,7 @@ import { useAppSelector } from "@/store/hooks";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getOrderByIdAction, cancelOrderAction } from "@/actions/order.actions";
 import { verifyPaymentAction } from "@/actions/payment.actions";
+import { generateInvoicePDF } from "@/lib/generateInvoice";
 import { OrderType } from "@/types";
 import { use, Suspense } from "react";
 
@@ -24,6 +25,7 @@ function OrderDetailContent({ id }: { id: string }) {
   const [order, setOrder] = useState<OrderType | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState<{ type: "success" | "error" | "cancelled"; text: string } | null>(null);
 
   useEffect(() => {
@@ -69,6 +71,17 @@ function OrderDetailContent({ id }: { id: string }) {
     setCancelling(false);
   };
 
+  const handleDownloadInvoice = () => {
+    if (!order) return;
+    setDownloading(true);
+    try {
+      generateInvoicePDF(order);
+    } catch (error) {
+      console.error("Failed to generate invoice:", error);
+    }
+    setDownloading(false);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
@@ -106,12 +119,12 @@ function OrderDetailContent({ id }: { id: string }) {
 
       <Link href="/orders" className="text-sm text-blue-600 hover:underline mb-4 inline-block">&larr; Back to Orders</Link>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Order #{order._id.slice(-8).toUpperCase()}</h1>
           <p className="text-sm text-gray-500">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
           <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
             order.orderStatus === "delivered" ? "bg-green-100 text-green-700" :
             order.orderStatus === "cancelled" ? "bg-red-100 text-red-700" :
@@ -127,6 +140,16 @@ function OrderDetailContent({ id }: { id: string }) {
           }`}>
             Payment: {order.paymentStatus}
           </span>
+          <button
+            onClick={handleDownloadInvoice}
+            disabled={downloading}
+            className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {downloading ? "Generating..." : "Download Invoice"}
+          </button>
         </div>
       </div>
 

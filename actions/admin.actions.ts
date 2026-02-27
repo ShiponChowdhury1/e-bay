@@ -78,6 +78,15 @@ function getModels() {
         grandTotal: Number,
         orderStatus: String,
         paymentStatus: String,
+        paymentMethod: String,
+        stripeSessionId: String,
+        items: [{
+          product: mongoose.Schema.Types.ObjectId,
+          title: String,
+          price: Number,
+          quantity: Number,
+          image: String,
+        }],
       }, { timestamps: true })
     );
 
@@ -433,5 +442,107 @@ export async function adminDeleteCategoryAction(id: string) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
+  }
+}
+
+// ─── Get Payment Statistics ───
+export async function adminGetPaymentStatsAction() {
+  try {
+    await requireAdmin();
+    await connectDB();
+    const { Order } = getModels();
+
+    const [total, successful, pending, failed] = await Promise.all([
+      Order.countDocuments(),
+      Order.countDocuments({ paymentStatus: "paid" }),
+      Order.countDocuments({ paymentStatus: "pending" }),
+      Order.countDocuments({ paymentStatus: { $in: ["failed", "refunded"] } }),
+    ]);
+
+    const [totalRevenue, successfulRevenue] = await Promise.all([
+      Order.aggregate([{ $group: { _id: null, total: { $sum: "$grandTotal" } } }]),
+      Order.aggregate([
+        { $match: { paymentStatus: "paid" } },
+        { $group: { _id: null, total: { $sum: "$grandTotal" } } },
+      ]),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        total,
+        successful,
+        pending,
+        failed,
+        totalRevenue: totalRevenue[0]?.total || 0,
+        successfulRevenue: successfulRevenue[0]?.total || 0,
+      },
+    };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message, data: null };
+  }
+}
+
+// ─── Get Payment Transactions ───
+export async function adminGetPaymentTransactionsAction(page = 1, limit = 20, status?: string) {
+  try {
+    await requireAdmin();
+    await connectDB();
+    const { Order, User } = getModels();
+
+    const skip = (page - 1) * limit;
+    const filter: Record<string, unknown> = {};
+    if (status && status !== "all") {
+      if (status === "failed") {
+        filter.paymentStatus = { $in: ["failed", "refunded"] };
+      } else {
+        filter.paymentStatus = status;
+      }
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Order.countDocuments(filter),
+    ]);
+
+    // Get buyer info
+    const buyerIds = orders.map((o: { buyer: mongoose.Types.ObjectId }) => o.buyer);
+    const buyers = await User.find({ _id: { $in: buyerIds } }).select("name email").lean();
+    const buyerMap = new Map(buyers.map((b: { _id: mongoose.Types.ObjectId; name: string; email: string }) => [b._id.toString(), b]));
+
+    const transactions = orders.map((order: {
+      _id: mongoose.Types.ObjectId;
+      buyer: mongoose.Types.ObjectId;
+      grandTotal: number;
+      orderStatus: string;
+      paymentStatus: string;
+      paymentMethod?: string;
+      stripeSessionId?: string;
+      createdAt: Date;
+    }) => ({
+      _id: order._id,
+      orderId: order._id.toString().slice(-8).toUpperCase(),
+      buyer: buyerMap.get(order.buyer?.toString()) || { name: "Unknown", email: "" },
+      amount: order.grandTotal || 0,
+      orderStatus: order.orderStatus,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod || "card",
+      stripeSessionId: order.stripeSessionId,
+      createdAt: order.createdAt,
+    }));
+
+    return {
+      success: true,
+      data: JSON.parse(JSON.stringify(transactions)),
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message, data: [] };
   }
 }
