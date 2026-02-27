@@ -109,19 +109,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center px-3 sm:px-4 py-6 sm:py-8">
+      <div className="max-w-md w-full bg-white rounded-xl sm:rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-600 tracking-tight">eBay</h1>
+        <div className="text-center mb-5 sm:mb-8">
+          <Link href="/">
+            <h1 className="text-3xl sm:text-4xl font-bold text-blue-600 tracking-tight">eBay</h1>
+          </Link>
           <p className="text-gray-500 mt-2 text-sm">Create your account</p>
         </div>
 
         {/* Error Messages */}
         {(error || localError) && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm flex items-center gap-2">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-3 rounded-lg mb-4 text-xs sm:text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            {localError || error}
+            <span className="flex-1">{localError || error}</span>
           </div>
         )}
 
@@ -131,14 +133,14 @@ export default function RegisterPage() {
         </div>
 
         {/* Divider */}
-        <div className="flex items-center mb-5">
+        <div className="flex items-center mb-4 sm:mb-5">
           <div className="flex-1 border-t border-gray-200" />
-          <span className="px-4 text-xs text-gray-400 uppercase tracking-wider">or register with email</span>
+          <span className="px-3 sm:px-4 text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">or register with email</span>
           <div className="flex-1 border-t border-gray-200" />
         </div>
 
         {/* Register Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Full Name
@@ -148,7 +150,7 @@ export default function RegisterPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400 text-sm sm:text-base"
               placeholder="John Doe"
             />
           </div>
@@ -162,7 +164,7 @@ export default function RegisterPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400 text-sm sm:text-base"
               placeholder="you@example.com"
             />
           </div>
@@ -177,13 +179,13 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-12 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400 text-sm sm:text-base"
                 placeholder="Minimum 6 characters"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -203,7 +205,7 @@ export default function RegisterPage() {
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-gray-900! bg-white! border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-gray-400 text-sm sm:text-base"
               placeholder="Re-enter password"
             />
           </div>
@@ -213,29 +215,29 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               I want to
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setRole("buyer")}
-                className={`py-3 rounded-lg border-2 font-medium transition flex items-center justify-center gap-2 ${
+                className={`py-2.5 sm:py-3 rounded-lg border-2 font-medium transition flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base ${
                   role === "buyer"
                     ? "border-blue-600 bg-blue-50 text-blue-700"
                     : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                 Buy
               </button>
               <button
                 type="button"
                 onClick={() => setRole("seller")}
-                className={`py-3 rounded-lg border-2 font-medium transition flex items-center justify-center gap-2 ${
+                className={`py-2.5 sm:py-3 rounded-lg border-2 font-medium transition flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base ${
                   role === "seller"
                     ? "border-blue-600 bg-blue-50 text-blue-700"
                     : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >
-                <Store className="w-5 h-5" />
+                <Store className="w-4 h-4 sm:w-5 sm:h-5" />
                 Sell
               </button>
             </div>
@@ -244,7 +246,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm sm:text-base"
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -258,7 +260,7 @@ export default function RegisterPage() {
         </form>
 
         {/* Login Link */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-xs sm:text-sm text-gray-500 mt-5 sm:mt-6">
           Already have an account?{" "}
           <Link href="/login" className="text-blue-600 hover:underline font-semibold">
             Sign In

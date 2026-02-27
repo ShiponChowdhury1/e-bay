@@ -91,39 +91,158 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Order Management</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">
           View and manage all platform orders ({orders.length} total)
         </p>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2 overflow-x-auto pb-2">
         {(
           ["all", "pending", "confirmed", "shipped", "delivered", "cancelled"] as const
         ).map((status) => (
           <button
             key={status}
             onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
+            className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition whitespace-nowrap ${
               filter === status
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {status}{" "}
-            <span className="ml-1 text-xs opacity-75">
+            <span className="ml-0.5 sm:ml-1 text-[10px] sm:text-xs opacity-75">
               ({statusCounts[status]})
             </span>
           </button>
         ))}
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-xl border overflow-x-auto">
+      {/* Mobile Cards View */}
+      <div className="sm:hidden space-y-3">
+        {filteredOrders.map((order) => (
+          <div key={order._id} className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+            {/* Header */}
+            <div 
+              className="p-3 flex items-center justify-between cursor-pointer"
+              onClick={() => setExpandedId(expandedId === order._id ? null : order._id)}
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-blue-600">#{order._id.slice(-8).toUpperCase()}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium capitalize ${
+                    order.orderStatus === "delivered" ? "bg-green-100 text-green-700"
+                    : order.orderStatus === "confirmed" ? "bg-blue-100 text-blue-700"
+                    : order.orderStatus === "cancelled" ? "bg-red-100 text-red-700"
+                    : order.orderStatus === "shipped" ? "bg-purple-100 text-purple-700"
+                    : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {order.orderStatus}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">{order.buyer?.name} - {order.items?.length || 0} items</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-sm">${order.grandTotal?.toFixed(2)}</p>
+                <p className="text-[10px] text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+            
+            {/* Expanded Details */}
+            {expandedId === order._id && (
+              <div className="border-t border-gray-100 p-3 space-y-3 bg-gray-50/50">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-gray-500">Buyer:</span>
+                    <p className="font-medium">{order.buyer?.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Seller:</span>
+                    <p className="font-medium">{order.seller?.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Payment:</span>
+                    <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium capitalize ${
+                      order.paymentStatus === "paid" ? "bg-green-100 text-green-700"
+                      : order.paymentStatus === "failed" ? "bg-red-100 text-red-700"
+                      : "bg-orange-100 text-orange-700"
+                    }`}>{order.paymentStatus}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Method:</span>
+                    <span className="ml-1 uppercase">{order.paymentMethod}</span>
+                  </div>
+                </div>
+                
+                {/* Items */}
+                <div className="space-y-2">
+                  {order.items?.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-white rounded p-2">
+                      <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden relative shrink-0">
+                        {item.image && <Image src={item.image} alt="" fill className="object-cover" unoptimized />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{item.title}</p>
+                        <p className="text-[10px] text-gray-500">${item.price} × {item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  {order.orderStatus === "pending" && (
+                    <button
+                      disabled={updatingId === order._id}
+                      onClick={() => handleStatusChange(order._id, "confirmed")}
+                      className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                    >
+                      {updatingId === order._id ? "..." : "Approve"}
+                    </button>
+                  )}
+                  {order.orderStatus === "confirmed" && (
+                    <button
+                      disabled={updatingId === order._id}
+                      onClick={() => handleStatusChange(order._id, "shipped")}
+                      className="flex-1 px-3 py-2 bg-purple-600 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                    >
+                      {updatingId === order._id ? "..." : "Ship"}
+                    </button>
+                  )}
+                  {order.orderStatus === "shipped" && (
+                    <button
+                      disabled={updatingId === order._id}
+                      onClick={() => handleStatusChange(order._id, "delivered")}
+                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                    >
+                      {updatingId === order._id ? "..." : "Delivered"}
+                    </button>
+                  )}
+                  {(order.orderStatus === "pending" || order.orderStatus === "confirmed") && (
+                    <button
+                      disabled={updatingId === order._id}
+                      onClick={() => handleStatusChange(order._id, "cancelled")}
+                      className="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-medium disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {filteredOrders.length === 0 && (
+          <div className="text-center py-12 text-gray-400 text-sm">No orders found</div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-white rounded-xl border overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>

@@ -10,12 +10,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (!isAuthenticated || user?.role !== "admin")) {
       router.push("/login");
     }
   }, [isAuthenticated, isLoading, user, router]);
+
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Loading state
   if (isLoading || !isAuthenticated || user?.role !== "admin") {
@@ -29,11 +41,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  const handleMenuToggle = () => {
+    // On mobile, toggle mobile menu
+    if (window.innerWidth < 1024) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      // On desktop, toggle collapse
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminSidebar
         collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileOpen}
+        onToggle={handleMenuToggle}
       />
 
       {/* Main content area */}
@@ -43,11 +66,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }`}
       >
         <AdminTopbar
-          onMenuToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onMenuToggle={handleMenuToggle}
           sidebarCollapsed={sidebarCollapsed}
         />
 
-        <main className="p-4 lg:p-6">
+        <main className="p-3 sm:p-4 lg:p-6">
           {children}
         </main>
       </div>

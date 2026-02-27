@@ -127,9 +127,10 @@ const navItems = [
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen?: boolean;
 }
 
-export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
+export default function AdminSidebar({ collapsed, onToggle, mobileOpen = false }: AdminSidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -140,39 +141,52 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
   return (
     <>
       {/* Mobile overlay */}
-      {!collapsed && (
+      {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
           onClick={onToggle}
         />
       )}
 
       <aside
         className={`fixed top-0 left-0 z-50 h-full bg-slate-900 text-white transition-all duration-300 ease-in-out flex flex-col
-          ${collapsed ? "-translate-x-full lg:translate-x-0 lg:w-18" : "translate-x-0 w-64"}
+          ${mobileOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
+          lg:translate-x-0 ${collapsed ? "lg:w-18" : "lg:w-64"}
         `}
       >
-        {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700/50">
-          {!collapsed && (
-            <Link href="/admin" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="font-bold text-lg">eBay Admin</span>
-            </Link>
-          )}
+        {/* Logo + Desktop Toggle */}
+        <div className="flex items-center justify-between h-16 px-3 border-b border-slate-700/50">
+          <Link href="/admin" className={`flex items-center gap-2 ${collapsed ? "lg:hidden" : ""}`}>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <span className={`font-bold text-lg whitespace-nowrap ${collapsed ? "lg:hidden" : ""}`}>eBay Admin</span>
+          </Link>
+          
+          {/* Desktop collapsed logo */}
           {collapsed && (
-            <div className="w-full flex justify-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
+            <div className="hidden lg:flex w-full justify-center">
+              <Link href="/admin">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+              </Link>
             </div>
           )}
+
+          {/* Mobile close button */}
+          <button
+            onClick={onToggle}
+            className="lg:hidden p-1.5 rounded-lg hover:bg-slate-800 transition text-slate-400"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Navigation */}
@@ -183,35 +197,56 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => {
+                  // Close mobile menu on nav click
+                  if (window.innerWidth < 1024) onToggle();
+                }}
                 title={collapsed ? item.label : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                   ${active
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
                     : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   }
-                  ${collapsed ? "justify-center" : ""}
+                  ${collapsed ? "lg:justify-center lg:px-2" : ""}
                 `}
               >
                 <span className="shrink-0">{item.icon}</span>
-                {!collapsed && <span className="truncate">{item.label}</span>}
+                <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
               </Link>
             );
           })}
         </nav>
+
+        {/* Desktop Toggle Button */}
+        <button
+          onClick={onToggle}
+          className="hidden lg:flex items-center justify-center p-2 mx-3 mb-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg 
+            className={`w-5 h-5 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+          <span className={`ml-2 text-sm ${collapsed ? "hidden" : ""}`}>Collapse</span>
+        </button>
 
         {/* Back to site */}
         <div className="border-t border-slate-700/50 p-3">
           <Link
             href="/"
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition
-              ${collapsed ? "justify-center" : ""}
+              ${collapsed ? "lg:justify-center lg:px-2" : ""}
             `}
             title={collapsed ? "Back to Site" : undefined}
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
             </svg>
-            {!collapsed && <span>Back to Site</span>}
+            <span className={`${collapsed ? "lg:hidden" : ""}`}>Back to Site</span>
           </Link>
         </div>
       </aside>

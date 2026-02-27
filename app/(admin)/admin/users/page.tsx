@@ -72,11 +72,11 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-500 text-sm mt-1">{users.length} total users</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">User Management</h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">{users.length} total users</p>
         </div>
         <div className="relative">
           <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,12 +87,80 @@ export default function AdminUsersPage() {
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+            className="pl-10 pr-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      {/* Mobile Cards View */}
+      <div className="sm:hidden space-y-3">
+        {filtered.map((u) => {
+          const uid = u._id || u.id;
+          return (
+            <div key={uid} className={`bg-white rounded-lg border border-gray-100 p-4 ${u.isBanned ? "bg-red-50/30" : ""}`}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  {u.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">{u.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <select
+                      value={u.role}
+                      onChange={(e) => handleRoleChange(uid!, e.target.value as "admin" | "seller" | "buyer")}
+                      className="px-2 py-1 border border-gray-200 rounded-lg text-[10px] font-medium bg-white"
+                    >
+                      <option value="buyer">Buyer</option>
+                      <option value="seller">Seller</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    {u.isBanned ? (
+                      <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-medium">
+                        Banned
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium">
+                        Active
+                      </span>
+                    )}
+                    <span className="text-[10px] text-gray-400">
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
+                    </span>
+                  </div>
+                  {u.isBanned && u.banReason && (
+                    <p className="text-xs text-red-500 mt-1 truncate">{u.banReason}</p>
+                  )}
+                </div>
+                {u.isBanned ? (
+                  <button
+                    onClick={() => handleUnban(uid!)}
+                    className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium shrink-0"
+                  >
+                    Unban
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      const reason = prompt("Ban reason:");
+                      if (reason) handleBan(uid!, reason);
+                    }}
+                    className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium shrink-0"
+                  >
+                    Ban
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-gray-400 text-sm">No users found</div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

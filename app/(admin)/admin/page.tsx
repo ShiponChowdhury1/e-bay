@@ -137,28 +137,28 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-500 text-sm mt-1">Welcome back! Here&apos;s what&apos;s happening on your platform.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">Welcome back! Here&apos;s what&apos;s happening on your platform.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((card) => {
           const inner = (
             <div
               key={card.label}
-              className={`bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:border-gray-200 transition-all ring-1 ${card.ring}`}
+              className={`bg-white rounded-lg sm:rounded-xl border border-gray-100 p-3 sm:p-5 hover:shadow-md hover:border-gray-200 transition-all ring-1 ${card.ring}`}
             >
               <div className="flex items-center justify-between">
-                <div className={`w-12 h-12 rounded-xl ${card.color} flex items-center justify-center`}>
-                  {card.icon}
+                <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl ${card.color} flex items-center justify-center`}>
+                  <span className="scale-75 sm:scale-100">{card.icon}</span>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-4">{card.value}</p>
-              <p className="text-sm text-gray-500 mt-1">{card.label}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-3 sm:mt-4">{card.value}</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate">{card.label}</p>
             </div>
           );
           return card.href ? (
@@ -173,21 +173,21 @@ export default function AdminDashboard() {
 
       {/* Alerts */}
       {stats?.users?.banned ? (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
           <div className="flex-1">
-            <p className="text-red-800 font-medium text-sm">
+            <p className="text-red-800 font-medium text-xs sm:text-sm">
               {stats.users.banned} banned user(s) on the platform
             </p>
-            <p className="text-red-600 text-xs mt-0.5">Review and manage banned users</p>
+            <p className="text-red-600 text-[10px] sm:text-xs mt-0.5">Review and manage banned users</p>
           </div>
           <Link
             href="/admin/users"
-            className="px-4 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition w-full sm:w-auto text-center"
           >
             Manage
           </Link>
@@ -196,25 +196,25 @@ export default function AdminDashboard() {
 
       {/* Monthly Sales Chart */}
       {stats?.monthlySales && stats.monthlySales.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Monthly Sales</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Revenue and orders breakdown by month</p>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900">Monthly Sales</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Revenue and orders breakdown by month</p>
             </div>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"></span>
-                <span className="text-xs font-medium text-gray-600">Revenue</span>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"></span>
+                <span className="text-[10px] sm:text-xs font-medium text-gray-600">Revenue</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"></span>
-                <span className="text-xs font-medium text-gray-600">Orders</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"></span>
+                <span className="text-[10px] sm:text-xs font-medium text-gray-600">Orders</span>
               </div>
             </div>
           </div>
-          <div className="p-6 pt-8">
-            <ResponsiveContainer width="100%" height={350}>
+          <div className="p-3 sm:p-6 pt-6 sm:pt-8">
+            <ResponsiveContainer width="100%" height={280}>
               <AreaChart
                 data={stats.monthlySales.map((m) => ({
                   month: new Date(m._id.year, m._id.month - 1).toLocaleDateString("en-US", {
@@ -294,47 +294,47 @@ export default function AdminDashboard() {
       )}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <Link
           href="/admin/users"
-          className="flex items-center gap-4 bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:border-blue-200 transition-all group"
+          className="flex items-center gap-3 sm:gap-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 p-4 sm:p-5 hover:shadow-md hover:border-blue-200 transition-all group"
         >
-          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <div>
-            <p className="font-semibold text-gray-900">Manage Users</p>
-            <p className="text-xs text-gray-500">View, ban, or change roles</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 text-sm sm:text-base">Manage Users</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">View, ban, or change roles</p>
           </div>
         </Link>
         <Link
           href="/admin/products"
-          className="flex items-center gap-4 bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:border-purple-200 transition-all group"
+          className="flex items-center gap-3 sm:gap-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 p-4 sm:p-5 hover:shadow-md hover:border-purple-200 transition-all group"
         >
-          <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition">
-            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
-          <div>
-            <p className="font-semibold text-gray-900">Manage Products</p>
-            <p className="text-xs text-gray-500">Review and toggle listings</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 text-sm sm:text-base">Manage Products</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">Review and toggle listings</p>
           </div>
         </Link>
         <Link
           href="/admin/categories"
-          className="flex items-center gap-4 bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:border-green-200 transition-all group"
+          className="flex items-center gap-3 sm:gap-4 bg-white rounded-lg sm:rounded-xl border border-gray-100 p-4 sm:p-5 hover:shadow-md hover:border-green-200 transition-all group"
         >
-          <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition">
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-green-100 transition">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
           </div>
-          <div>
-            <p className="font-semibold text-gray-900">Manage Categories</p>
-            <p className="text-xs text-gray-500">Add, edit, or delete categories</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 text-sm sm:text-base">Manage Categories</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">Add, edit, or delete categories</p>
           </div>
         </Link>
       </div>

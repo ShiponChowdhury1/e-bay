@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductsAction, getCategoriesAction } from "@/actions/product.actions";
 import { ProductType, CategoryType } from "@/types";
+import MobileFilters from "@/components/shared/MobileFilters";
 
 interface SearchParams {
   search?: string;
@@ -41,22 +42,22 @@ export default async function ProductsPage({
   const pagination = res.pagination;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       {/* Breadcrumb */}
-      <div className="text-sm text-gray-500 mb-4">
+      <div className="text-xs sm:text-sm text-gray-500 mb-4">
         <Link href="/" className="hover:text-blue-600">Home</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900 font-medium">Products</span>
         {params.search && (
           <>
             <span className="mx-2">/</span>
-            <span className="text-gray-900">Search: &quot;{params.search}&quot;</span>
+            <span className="text-gray-900 truncate">Search: &quot;{params.search}&quot;</span>
           </>
         )}
       </div>
 
       <div className="flex gap-6">
-        {/* Sidebar Filters */}
+        {/* Sidebar Filters - Desktop */}
         <aside className="hidden lg:block w-64 flex-shrink-0">
           <div className="sticky top-24 space-y-6">
             {/* Categories */}
@@ -150,50 +151,57 @@ export default async function ProductsPage({
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Sort Bar */}
-          <div className="flex items-center justify-between mb-4 bg-gray-50 rounded-lg px-4 py-3">
-            <p className="text-sm text-gray-600">
-              {pagination ? (
-                <><strong>{pagination.total}</strong> results</>
-              ) : (
-                <>{products.length} results</>
-              )}
-            </p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Sort by:</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 bg-gray-50 rounded-lg px-3 sm:px-4 py-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Mobile Filter Button */}
+              <MobileFilters categories={categories} params={params} />
+              
+              <p className="text-sm text-gray-600">
+                {pagination ? (
+                  <><strong>{pagination.total}</strong> results</>
+                ) : (
+                  <>{products.length} results</>
+                )}
+              </p>
+            </div>
+            
+            {/* Sort Options */}
+            <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+              <span className="text-gray-500 whitespace-nowrap">Sort:</span>
               <Link
                 href={buildUrl(params, { sort: "createdAt", order: "desc" })}
-                className={`px-3 py-1 rounded ${params.sort === "createdAt" || !params.sort ? "bg-blue-600 text-white" : "hover:bg-gray-200"}`}
+                className={`px-2 sm:px-3 py-1 rounded whitespace-nowrap ${params.sort === "createdAt" || !params.sort ? "bg-blue-600 text-white" : "hover:bg-gray-200"}`}
               >
                 Newest
               </Link>
               <Link
                 href={buildUrl(params, { sort: "price", order: "asc" })}
-                className={`px-3 py-1 rounded ${params.sort === "price" && params.order === "asc" ? "bg-blue-600 text-white" : "hover:bg-gray-200"}`}
+                className={`px-2 sm:px-3 py-1 rounded whitespace-nowrap ${params.sort === "price" && params.order === "asc" ? "bg-blue-600 text-white" : "hover:bg-gray-200"}`}
               >
-                Price: Low
+                Price ↑
               </Link>
               <Link
                 href={buildUrl(params, { sort: "price", order: "desc" })}
-                className={`px-3 py-1 rounded ${params.sort === "price" && params.order === "desc" ? "bg-blue-600 text-white" : "hover:bg-gray-200"}`}
+                className={`px-2 sm:px-3 py-1 rounded whitespace-nowrap ${params.sort === "price" && params.order === "desc" ? "bg-blue-600 text-white" : "hover:bg-gray-200"}`}
               >
-                Price: High
+                Price ↓
               </Link>
             </div>
           </div>
 
           {/* Products Grid */}
           {products.length === 0 ? (
-            <div className="text-center py-20">
-              <svg className="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-12 sm:py-20">
+              <svg className="w-16 sm:w-20 h-16 sm:h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
-              <p className="text-gray-500 text-lg mb-2">No products found</p>
+              <p className="text-gray-500 text-base sm:text-lg mb-2">No products found</p>
               <p className="text-gray-400 text-sm">Try adjusting your filters</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
               {products.map((product) => {
                 const pid = product._id || product.id;
                 const isAuction = product.productType === "auction";
@@ -203,7 +211,7 @@ export default async function ProductsPage({
 
                 return (
                   <Link key={pid} href={`/products/${pid}`} className="group">
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1">
                       <div className="aspect-square bg-gray-100 relative overflow-hidden">
                         {product.images?.[0] ? (
                           <Image
@@ -214,35 +222,35 @@ export default async function ProductsPage({
                             unoptimized
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl sm:text-4xl">
                             📦
                           </div>
                         )}
                         {isAuction && (
-                          <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded">
+                          <span className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 px-1.5 sm:px-2 py-0.5 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded">
                             AUCTION
                           </span>
                         )}
                         {product.condition !== "new" && (
-                          <span className="absolute top-2 right-2 px-2 py-0.5 bg-gray-800/70 text-white text-xs rounded capitalize">
+                          <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-gray-800/70 text-white text-[10px] sm:text-xs rounded capitalize">
                             {product.condition}
                           </span>
                         )}
                       </div>
-                      <div className="p-3">
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600">
+                      <div className="p-2 sm:p-3">
+                        <h3 className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600 min-h-[2rem] sm:min-h-[2.5rem]">
                           {product.title}
                         </h3>
-                        <p className="text-lg font-bold text-gray-900">
+                        <p className="text-sm sm:text-lg font-bold text-gray-900">
                           ${price?.toFixed(2)}
                         </p>
                         {product.originalPrice && product.originalPrice > product.price && (
-                          <p className="text-xs text-gray-400 line-through">${product.originalPrice.toFixed(2)}</p>
+                          <p className="text-[10px] sm:text-xs text-gray-400 line-through">${product.originalPrice.toFixed(2)}</p>
                         )}
                         {product.freeShipping && (
-                          <p className="text-xs text-green-600 font-medium mt-1">Free Shipping</p>
+                          <p className="text-[10px] sm:text-xs text-green-600 font-medium mt-1">Free Shipping</p>
                         )}
-                        <p className="text-xs text-gray-400 mt-1">{product.sold} sold</p>
+                        <p className="text-[10px] sm:text-xs text-gray-400 mt-1">{product.sold || 0} sold</p>
                       </div>
                     </div>
                   </Link>
@@ -253,13 +261,13 @@ export default async function ProductsPage({
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-8">
+            <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8 flex-wrap">
               {page > 1 && (
                 <Link
                   href={buildUrl(params, { page: String(page - 1) })}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm"
+                  className="px-3 sm:px-4 py-2 border rounded-lg hover:bg-gray-50 text-xs sm:text-sm"
                 >
-                  Previous
+                  Prev
                 </Link>
               )}
               {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
@@ -268,7 +276,7 @@ export default async function ProductsPage({
                   <Link
                     key={p}
                     href={buildUrl(params, { page: String(p) })}
-                    className={`px-3 py-2 rounded-lg text-sm ${p === page ? "bg-blue-600 text-white" : "border hover:bg-gray-50"}`}
+                    className={`px-2.5 sm:px-3 py-2 rounded-lg text-xs sm:text-sm min-w-[36px] sm:min-w-[40px] text-center ${p === page ? "bg-blue-600 text-white" : "border hover:bg-gray-50"}`}
                   >
                     {p}
                   </Link>
@@ -277,7 +285,7 @@ export default async function ProductsPage({
               {page < pagination.totalPages && (
                 <Link
                   href={buildUrl(params, { page: String(page + 1) })}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm"
+                  className="px-3 sm:px-4 py-2 border rounded-lg hover:bg-gray-50 text-xs sm:text-sm"
                 >
                   Next
                 </Link>
