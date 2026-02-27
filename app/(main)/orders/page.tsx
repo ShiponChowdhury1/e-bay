@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";
 import { getMyOrdersAction } from "@/actions/order.actions";
@@ -71,9 +72,9 @@ export default function OrdersPage() {
 
                 <div className="flex gap-3 overflow-x-auto">
                   {(order.items || []).map((item, i) => (
-                    <div key={i} className="flex-shrink-0 w-14 h-14 bg-gray-100 rounded-lg overflow-hidden">
+                    <div key={i} className="flex-shrink-0 w-14 h-14 bg-gray-100 rounded-lg overflow-hidden relative">
                       {item.image ? (
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        <Image src={item.image} alt={item.title} fill className="object-cover" unoptimized />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs">📦</div>
                       )}

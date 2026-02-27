@@ -112,9 +112,10 @@ export async function getProductsAction(query: {
     if (condition) filter.condition = condition;
     if (productType) filter.productType = productType;
     if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = minPrice;
-      if (maxPrice) filter.price.$lte = maxPrice;
+      const priceFilter: { $gte?: number; $lte?: number } = {};
+      if (minPrice) priceFilter.$gte = minPrice;
+      if (maxPrice) priceFilter.$lte = maxPrice;
+      filter.price = priceFilter;
     }
 
     const skip = (page - 1) * limit;

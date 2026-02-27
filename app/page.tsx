@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getProductsAction, getCategoriesAction } from "@/actions/product.actions";
 import { ProductType, CategoryType } from "@/types";
 import Header from "@/components/layout/Header";
@@ -62,9 +63,9 @@ export default async function HomePage() {
                   href={`/products?category=${cat._id}`}
                   className="group bg-gray-50 rounded-xl p-4 text-center hover:shadow-lg hover:bg-blue-50 transition"
                 >
-                  <div className="w-16 h-16 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center text-2xl group-hover:bg-blue-200 transition">
+                  <div className="w-16 h-16 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center text-2xl group-hover:bg-blue-200 transition overflow-hidden relative">
                     {cat.image ? (
-                      <img src={cat.image} alt={cat.name} className="w-10 h-10 object-cover rounded-full" />
+                      <Image src={cat.image} alt={cat.name} width={40} height={40} className="object-cover rounded-full" unoptimized />
                     ) : (
                       <span>📦</span>
                     )}
@@ -151,10 +152,12 @@ function ProductCard({ product, isAuction = false }: { product: ProductType; isA
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1">
         <div className="aspect-square bg-gray-100 relative overflow-hidden">
           {product.images?.[0] ? (
-            <img
+            <Image
               src={product.images[0]}
               alt={product.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400">

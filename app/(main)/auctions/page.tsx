@@ -12,7 +12,8 @@ interface AuctionResponse {
 export default async function AuctionsPage() {
   const res = (await getActiveAuctionsAction()) as AuctionResponse;
   const auctions = res.data || [];
-  const now = Date.now();
+  // Store current date at request time for time comparisons
+  const requestDate = new Date();
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -43,7 +44,7 @@ export default async function AuctionsPage() {
             const pid = auction._id || auction.id;
             const currentPrice = auction.auctionCurrentPrice || auction.auctionStartPrice || auction.price;
             const endTime = auction.auctionEndTime ? new Date(auction.auctionEndTime) : null;
-            const isEnding = endTime && endTime.getTime() - now < 24 * 60 * 60 * 1000;
+            const isEnding = endTime && endTime.getTime() - requestDate.getTime() < 24 * 60 * 60 * 1000;
 
             return (
               <Link key={pid} href={`/products/${pid}`} className="group">

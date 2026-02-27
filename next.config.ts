@@ -1,25 +1,21 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverActions: {
-    bodySizeLimit: "5mb",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-        pathname: "/**",
+        hostname: "**",
       },
       {
-        protocol: "https",
-        hostname: "*.googleusercontent.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-        pathname: "/**",
+        protocol: "http",
+        hostname: "localhost",
       },
     ],
   },

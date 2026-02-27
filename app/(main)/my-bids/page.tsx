@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";
 import { getMyBidsAction } from "@/actions/auction.actions";
@@ -63,9 +64,9 @@ export default function MyBidsPage() {
               <div key={bid._id} className="bg-white rounded-xl border p-5 hover:shadow-md transition">
                 <div className="flex gap-4">
                   {product && typeof product !== "string" && (
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
                       {product.images?.[0] ? (
-                        <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
+                        <Image src={product.images[0]} alt={product.title} fill className="object-cover" unoptimized />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">🏷️</div>
                       )}

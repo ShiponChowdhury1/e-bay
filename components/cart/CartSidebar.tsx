@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { removeFromCart, updateQuantity, clearCart, toggleCart, selectCartItems, selectCartTotal, selectCartItemCount } from "@/store/slices/cartSlice";
 
@@ -59,9 +60,9 @@ export default function CartSidebar() {
               const pid = item.product._id || item.product.id;
               return (
                 <div key={pid} className="flex gap-3 bg-gray-50 rounded-lg p-3">
-                  <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                  <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden relative">
                     {item.product.images?.[0] ? (
-                      <img src={item.product.images[0]} alt={item.product.title} className="w-full h-full object-cover" />
+                      <Image src={item.product.images[0]} alt={item.product.title} fill className="object-cover" unoptimized />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
                         No Image

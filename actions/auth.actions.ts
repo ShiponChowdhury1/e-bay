@@ -95,8 +95,25 @@ function generateOtp(): string {
   return crypto.randomInt(100000, 999999).toString();
 }
 
+// ─── User type for serialization ───
+interface UserDocument {
+  _id: { toString: () => string };
+  name?: string;
+  email?: string;
+  role?: string;
+  avatar?: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+  };
+}
+
 // ─── Helper: serialize user for client ───
-function serializeUser(user: any) {
+function serializeUser(user: UserDocument) {
   return {
     id: user._id.toString(),
     name: user.name || "",
@@ -194,9 +211,10 @@ export async function registerAction(formData: {
         accessToken,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Register error:", error);
-    return { success: false, message: error.message || "Registration failed" };
+    const message = error instanceof Error ? error.message : "Registration failed";
+    return { success: false, message };
   }
 }
 
@@ -260,9 +278,10 @@ export async function loginAction(formData: {
         accessToken,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Login error:", error);
-    return { success: false, message: error.message || "Login failed" };
+    const message = error instanceof Error ? error.message : "Login failed";
+    return { success: false, message };
   }
 }
 
@@ -328,9 +347,10 @@ export async function googleAuthAction(googleData: {
         accessToken,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Google auth error:", error);
-    return { success: false, message: error.message || "Google authentication failed" };
+    const message = error instanceof Error ? error.message : "Google authentication failed";
+    return { success: false, message };
   }
 }
 
@@ -387,7 +407,7 @@ export async function refreshTokenAction() {
         user: serializeUser(user),
       },
     };
-  } catch (error: any) {
+  } catch {
     return { success: false, message: "Token refresh failed" };
   }
 }
@@ -488,8 +508,9 @@ export async function updateProfileAction(data: {
         user: serializeUser(user),
       },
     };
-  } catch (error: any) {
-    return { success: false, message: error.message || "Update failed" };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Update failed";
+    return { success: false, message };
   }
 }
 
@@ -556,9 +577,10 @@ export async function updateAvatarAction(base64Image: string) {
       message: "Avatar updated successfully",
       data: { user: serializeUser(user) },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Update avatar error:", error);
-    return { success: false, message: error.message || "Failed to update avatar" };
+    const message = error instanceof Error ? error.message : "Failed to update avatar";
+    return { success: false, message };
   }
 }
 
@@ -598,9 +620,10 @@ export async function sendOtpAction(data: {
     await sendOtpEmail(data.email, otp, data.purpose);
 
     return { success: true, message: `OTP sent to ${data.email}` };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Send OTP error:", error);
-    return { success: false, message: error.message || "Failed to send OTP" };
+    const message = error instanceof Error ? error.message : "Failed to send OTP";
+    return { success: false, message };
   }
 }
 
@@ -641,9 +664,10 @@ export async function verifyOtpAction(data: { email: string; otp: string }) {
       message: "Email verified successfully",
       data: { user: serializeUser(user) },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Verify OTP error:", error);
-    return { success: false, message: error.message || "Verification failed" };
+    const message = error instanceof Error ? error.message : "Verification failed";
+    return { success: false, message };
   }
 }
 
@@ -673,9 +697,10 @@ export async function forgotPasswordAction(data: { email: string }) {
     await sendOtpEmail(data.email, otp, "reset");
 
     return { success: true, message: `Password reset OTP sent to ${data.email}` };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Forgot password error:", error);
-    return { success: false, message: error.message || "Failed to send reset OTP" };
+    const message = error instanceof Error ? error.message : "Failed to send reset OTP";
+    return { success: false, message };
   }
 }
 
@@ -700,9 +725,10 @@ export async function resetPasswordAction(data: {
     await OtpModel.deleteMany({ email: data.email, purpose: "reset" });
 
     return { success: true, message: "Password reset successfully" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Reset password error:", error);
-    return { success: false, message: error.message || "Password reset failed" };
+    const message = error instanceof Error ? error.message : "Password reset failed";
+    return { success: false, message };
   }
 }
 
@@ -730,9 +756,10 @@ export async function verifyResetOtpAction(data: { email: string; otp: string })
     await OtpModel.deleteMany({ email: data.email, purpose: "reset" });
 
     return { success: true, message: "OTP verified successfully" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Verify reset OTP error:", error);
-    return { success: false, message: error.message || "OTP verification failed" };
+    const message = error instanceof Error ? error.message : "OTP verification failed";
+    return { success: false, message };
   }
 }
 
@@ -775,8 +802,9 @@ export async function changePasswordAction(data: {
     await user.save();
 
     return { success: true, message: "Password changed successfully" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Change password error:", error);
-    return { success: false, message: error.message || "Password change failed" };
+    const message = error instanceof Error ? error.message : "Password change failed";
+    return { success: false, message };
   }
 }

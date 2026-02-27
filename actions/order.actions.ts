@@ -175,8 +175,9 @@ export async function createOrderAction(data: {
       message: "Order placed successfully",
       data: JSON.parse(JSON.stringify(order)),
     };
-  } catch (error: any) {
-    return { success: false, message: error.message || "Failed to create order" };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to create order";
+    return { success: false, message };
   }
 }
 
@@ -205,8 +206,9 @@ export async function getMyOrdersAction(page = 1, limit = 20) {
       data: JSON.parse(JSON.stringify(orders)),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
-  } catch (error: any) {
-    return { success: false, data: [], message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, data: [], message };
   }
 }
 
@@ -235,8 +237,9 @@ export async function getSellerOrdersAction(page = 1, limit = 20) {
       data: JSON.parse(JSON.stringify(orders)),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
-  } catch (error: any) {
-    return { success: false, data: [], message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, data: [], message };
   }
 }
 
@@ -266,8 +269,9 @@ export async function getOrderByIdAction(orderId: string) {
       success: true,
       data: JSON.parse(JSON.stringify(order)),
     };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message };
   }
 }
 
@@ -309,8 +313,9 @@ export async function cancelOrderAction(orderId: string) {
       message: "Order cancelled",
       data: JSON.parse(JSON.stringify(order)),
     };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message };
   }
 }
 
@@ -342,8 +347,9 @@ export async function adminGetAllOrdersAction(page = 1, limit = 100) {
       data: JSON.parse(JSON.stringify(orders)),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
-  } catch (error: any) {
-    return { success: false, data: [], message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, data: [], message };
   }
 }
 
@@ -382,7 +388,8 @@ export async function adminUpdateOrderStatusAction(
       message: `Order ${orderStatus}`,
       data: JSON.parse(JSON.stringify(updated)),
     };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message };
   }
 }

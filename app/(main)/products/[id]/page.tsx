@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getProductByIdAction } from "@/actions/product.actions";
 import { getBidHistoryAction } from "@/actions/auction.actions";
 import { ProductType, BidType } from "@/types";
@@ -61,12 +62,14 @@ export default async function ProductDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Image Gallery */}
         <div>
-          <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
+          <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4 relative">
             {product.images?.[0] ? (
-              <img
+              <Image
                 src={product.images[0]}
                 alt={product.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400 text-6xl">
@@ -77,8 +80,8 @@ export default async function ProductDetailPage({
           {product.images && product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
               {product.images.slice(0, 4).map((img, i) => (
-                <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 cursor-pointer">
-                  <img src={img} alt={`${product.title} ${i + 1}`} className="w-full h-full object-cover" />
+                <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 cursor-pointer relative">
+                  <Image src={img} alt={`${product.title} ${i + 1}`} fill className="object-cover" unoptimized />
                 </div>
               ))}
             </div>

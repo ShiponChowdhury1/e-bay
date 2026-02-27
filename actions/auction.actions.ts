@@ -126,8 +126,9 @@ export async function placeBidAction(productId: string, amount: number) {
       message: "Bid placed successfully",
       data: JSON.parse(JSON.stringify(bid)),
     };
-  } catch (error: any) {
-    return { success: false, message: error.message || "Failed to place bid" };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to place bid";
+    return { success: false, message };
   }
 }
 
@@ -157,8 +158,9 @@ export async function getBidHistoryAction(
       data: JSON.parse(JSON.stringify(bids)),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
-  } catch (error: any) {
-    return { success: false, data: [], message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, data: [], message };
   }
 }
 
@@ -192,8 +194,9 @@ export async function getActiveAuctionsAction(page = 1, limit = 20) {
       data: JSON.parse(JSON.stringify(products)),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
-  } catch (error: any) {
-    return { success: false, data: [], message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, data: [], message };
   }
 }
 
@@ -226,7 +229,8 @@ export async function getMyBidsAction(page = 1, limit = 20) {
       data: JSON.parse(JSON.stringify(bids)),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
-  } catch (error: any) {
-    return { success: false, data: [], message: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, data: [], message };
   }
 }

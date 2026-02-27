@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";
 import { getSellerProductsAction, deleteProductAction } from "@/actions/product.actions";
@@ -90,9 +91,9 @@ export default function SellerProductsPage() {
                   <tr key={pid} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
                           {p.images?.[0] ? (
-                            <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
+                            <Image src={p.images[0]} alt="" fill className="object-cover" unoptimized />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-xs">📦</div>
                           )}
