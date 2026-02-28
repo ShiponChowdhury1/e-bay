@@ -1,15 +1,26 @@
 import { QueryClient } from "@tanstack/react-query";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
-      gcTime: 5 * 60 * 1000, // 5 minutes (previously cacheTime)
+      staleTime: 5 * 60 * 1000, // 5 minutes — এই সময়ের মধ্যে same data refetch হবে না
+      gcTime: 30 * 60 * 1000, // 30 minutes — localStorage এ cache থাকবে
       refetchOnWindowFocus: false,
       retry: 1,
     },
   },
 });
+
+// localStorage এ cache persist করার জন্য — refresh এ data থাকবে
+export const localStoragePersister =
+  typeof window !== "undefined"
+    ? createSyncStoragePersister({
+        storage: window.localStorage,
+        key: "EBAY_QUERY_CACHE",
+        throttleTime: 1000,
+      })
+    : null;
 
 // Query Keys - centralized for consistency
 export const queryKeys = {

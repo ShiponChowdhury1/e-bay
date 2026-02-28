@@ -39,7 +39,7 @@ export default async function ProductsPage({
   const categoriesRes = await getCategoriesAction();
   const products = (res.data || []) as ProductType[];
   const categories = (categoriesRes.data || []) as CategoryType[];
-  const pagination = res.pagination;
+  const pagination = "pagination" in res ? res.pagination : undefined;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">

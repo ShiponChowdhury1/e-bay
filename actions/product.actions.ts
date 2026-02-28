@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import mongoose from "mongoose";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
+import { unstable_cache, revalidatePath } from "next/cache";
 
 // ─── Product Schema ───
 const productSchema = new mongoose.Schema(
@@ -76,22 +77,11 @@ async function getCurrentUser() {
   }
 }
 
-// ─── Get All Products ───
-export async function getProductsAction(query: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  category?: string;
-  condition?: string;
-  productType?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  sort?: string;
-  order?: "asc" | "desc";
-}) {
-  try {
+// ─── Cached: Get All Products ───
+const _fetchProducts = unstable_cache(
+  async (queryStr: string) => {
     await connectDB();
-
+    const query = JSON.parse(queryStr);
     const {
       page = 1,
       limit = 20,
@@ -106,7 +96,6 @@ export async function getProductsAction(query: {
     } = query;
 
     const filter: Record<string, unknown> = { isActive: true };
-
     if (search) filter.$text = { $search: search };
     if (category) filter.category = category;
     if (condition) filter.condition = condition;
@@ -119,7 +108,6 @@ export async function getProductsAction(query: {
     }
 
     const skip = (page - 1) * limit;
-
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate("category", "name slug")
@@ -130,17 +118,31 @@ export async function getProductsAction(query: {
         .lean(),
       Product.countDocuments(filter),
     ]);
-
     return {
       success: true,
       data: JSON.parse(JSON.stringify(products)),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
+  },
+  ["products-list"],
+  { revalidate: 5 * 60 } // 5 মিনিট cache
+);
+
+// ─── Get All Products ───
+export async function getProductsAction(query: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  condition?: string;
+  productType?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: string;
+  order?: "asc" | "desc";
+}) {
+  try {
+    return await _fetchProducts(JSON.stringify(query || {}));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message, data: [] };
@@ -173,25 +175,29 @@ export async function getProductByIdAction(id: string) {
   }
 }
 
+// ─── Cached: Get Product by Slug ───
+const _fetchProductBySlug = unstable_cache(
+  async (slug: string) => {
+    await connectDB();
+    const product = await Product.findOne({ slug })
+      .populate("category", "name slug")
+      .populate("seller", "name avatar phone")
+      .lean();
+    if (!product) return { success: false, message: "Product not found" };
+    return { success: true, data: JSON.parse(JSON.stringify(product)) };
+  },
+  ["product-by-slug"],
+  { revalidate: 5 * 60 }
+);
+
 // ─── Get Product by Slug ───
 export async function getProductBySlugAction(slug: string) {
   try {
-    await connectDB();
-
-    const product = await Product.findOne({ slug })
-      .populate("category", "name slug")
-      .populate("seller", "name avatar phone");
-
-    if (!product) {
-      return { success: false, message: "Product not found" };
-    }
-
-    await Product.findByIdAndUpdate(product._id, { $inc: { views: 1 } });
-
-    return {
-      success: true,
-      data: JSON.parse(JSON.stringify(product)),
-    };
+    // Views increment separately (cache bypass)
+    connectDB().then(() =>
+      Product.findOneAndUpdate({ slug }, { $inc: { views: 1 } }).catch(() => null)
+    );
+    return await _fetchProductBySlug(slug);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
@@ -244,6 +250,10 @@ export async function createProductAction(data: {
       }),
     });
 
+    // নতুন product তৈরি হলে cache clear করো
+    revalidatePath("/products");
+    revalidatePath("/");
+
     return {
       success: true,
       message: "Product created successfully",
@@ -276,6 +286,10 @@ export async function updateProductAction(
     Object.assign(product, data);
     await product.save();
 
+    // Cache clear করো যাতে নতুন data দেখা যায়
+    revalidatePath("/products");
+    revalidatePath("/");
+
     return {
       success: true,
       message: "Product updated",
@@ -303,6 +317,8 @@ export async function deleteProductAction(productId: string) {
     }
 
     await Product.findByIdAndDelete(productId);
+    revalidatePath("/products");
+    revalidatePath("/");
     return { success: true, message: "Product deleted" };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An error occurred";
@@ -311,41 +327,41 @@ export async function deleteProductAction(productId: string) {
 }
 
 // ─── Get Featured Products ───
-export async function getFeaturedProductsAction(limit = 10) {
-  try {
-    await connectDB();
-
-    const products = await Product.find({ isActive: true, isFeatured: true })
-      .populate("category", "name slug")
-      .populate("seller", "name avatar")
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .lean();
-
-    return {
-      success: true,
-      data: JSON.parse(JSON.stringify(products)),
-    };
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "An error occurred";
-    return { success: false, data: [], message };
-  }
-}
+export const getFeaturedProductsAction = unstable_cache(
+  async (limit = 10) => {
+    try {
+      await connectDB();
+      const products = await Product.find({ isActive: true, isFeatured: true })
+        .populate("category", "name slug")
+        .populate("seller", "name avatar")
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+      return { success: true, data: JSON.parse(JSON.stringify(products)) };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An error occurred";
+      return { success: false, data: [], message };
+    }
+  },
+  ["featured-products"],
+  { revalidate: 5 * 60 }
+);
 
 // ─── Get Categories ───
-export async function getCategoriesAction() {
-  try {
-    await connectDB();
-    const categories = await Category.find({ isActive: true }).sort({ name: 1 }).lean();
-    return {
-      success: true,
-      data: JSON.parse(JSON.stringify(categories)),
-    };
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "An error occurred";
-    return { success: false, data: [], message };
-  }
-}
+export const getCategoriesAction = unstable_cache(
+  async () => {
+    try {
+      await connectDB();
+      const categories = await Category.find({ isActive: true }).sort({ name: 1 }).lean();
+      return { success: true, data: JSON.parse(JSON.stringify(categories)) };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An error occurred";
+      return { success: false, data: [], message };
+    }
+  },
+  ["categories-list"],
+  { revalidate: 10 * 60 } // 10 মিনিট cache (categories কম change হয়)
+);
 
 // ─── Get Seller Products ───
 export async function getSellerProductsAction(page = 1, limit = 20) {
